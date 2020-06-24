@@ -1,0 +1,36 @@
+function y = lwlr(X_train, y_train, x, tau)
+[m,n]=size(X_train);
+Theta = zeros(n,1);
+
+% Building W
+W = zeros(size(y_train,1),1);
+for i = 1:1:size(y_train,1)
+    for j = 1:1:size(y_train,2)
+        W(i,j) =  exp((-norm((x - X_train(i)))^2)/(2*(tau^2)));
+        %disp(strcat("W", int2str(i), ":  ") + exp((-norm((x - X_train(i)))^2)/(2*(tau^2))));
+    end
+end
+lambda = 0.0001;
+
+% Building grad_theta
+i = 0;
+while(not())
+    %Building h
+    h = 1./(1.+exp(-X_train*Theta));
+    %Building Z
+    Z = W.*(y_train - h);
+    %Buildig grad_theta
+    grad_theta = transpose(X_train)*Z - lambda*Theta;
+    %Building Hessian
+    d = W.*h.*(1-h);
+    D = diag(d);
+    Hessian = transpose(X_train)*D*X_train - lambda*eye(n,n);
+    %Updating Theta
+    Theta = Theta - inv(Hessian)*grad_theta;
+    i = i+1;
+end
+
+newH = 1./(1.+exp(-transpose(Theta)*x));
+y = newH > 0.5;
+
+end
