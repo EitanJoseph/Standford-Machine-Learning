@@ -1,0 +1,280 @@
+\documentclass{article}
+
+\usepackage{enumitem}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{mathrsfs}
+\usepackage{amsmath,amsthm,hyperref}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\DeclareMathOperator{\Tr}{tr}
+\usepackage{bbm}
+
+% Margins
+\usepackage[top=2.5cm, left=3cm, right=3cm, bottom=4.0cm]{geometry}
+% Colour table cells
+\usepackage[table]{xcolor}
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' /
+
+% my new commands
+\newcommand\partialkj{\frac{\partial^2}{\partial\theta_k\partial\theta_j}}
+\makeatletter
+\newcommand*\bigcdot{\mathpalette\bigcdot@{.5}}
+\newcommand*\bigcdot@[2]{\mathbin{\vcenter{\hbox{\scalebox{#2}{$\m@th#1\bullet$}}}}}
+\makeatother
+\newcommand{\minus}{\scalebox{0.5}[1.0]{$-$}}
+\newcommand{\zero}{\scalebox{0.6}[0.75]{$^{(0)}$}}
+\newcommand{\supi}[1]{\scalebox{0.6}[0.75]{$^{(#1)}$}}\newcommand{\supi}{\scalebox{0.6}[0.75]{$^{(i)}$}}
+\newcommand{\bigDash}{\scalebox{3.0}[1.0]{$-$}}
+
+
+
+%%%%%%%%%%%%%%%%%
+%     Title     %
+%%%%%%%%%%%%%%%%%
+\title{Problem Set #2: Kernels, SVMs, and Theory}
+\author{Eitan Joseph \and Caroline Wang}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%
+%   Problem 1   %
+%%%%%%%%%%%%%%%%%
+\section{Problem 1}
+\textbf{Kernel ridge regression\\\\}
+In contrast to ordinary least squares which has a cost function\begin{equation}
+    J(\theta) = \frac{1}{2}\sum_{i=1}^{m}\left(\theta^T x^{(i)}-y^{(i)}\right )^2
+\end{equation}we can also add a term that penalizes large weights in $\theta $. In \textit{ridge regression}, our least
+squares cost is regularized by adding a term $\lambda ||\theta ||^2$
+, where $\lambda>0$ is a fixed (known) constant
+(regularization will be discussed at greater length in an upcoming course lecutre). The ridge regression cost function is then\begin{equation*}
+     J(\theta) = \frac{1}{2}\sum_{i=1}^{m}\left(\theta^T x^{(i)}-y^{(i)}\right )^2 + \frac{\lambda}{2}||\theta ||^2
+\end{equation*}
+\begin{enumerate}[label=(\alph*)]
+    \item Use the vector notation described in class to find a closed-form expreesion for the
+value of $\theta$ which minimizes the ridge regression cost function.\\
+\textit{answer}: \\
+
+We know that the cost function without the penalty term can be written in closed form as
+\begin{align*}
+    \frac{1}{2}\left(X\theta-\Vec{y}\right)^T\left(X\theta-\Vec{y}\right)
+\end{align*}
+We can then rewrite the penalty term to be
+\begin{align*}
+    \frac{\lambda}{2}\theta^T\theta
+\end{align*}
+Therefore, together with the penalty term, the $J(\theta)$ will be as follows: \begin{align*}
+    J(\theta) = \frac{1}{2}\left(X\theta-\Vec{y}\right)^T\left(X\theta-\Vec{y}\right) + \frac{\lambda}{2}\theta^T\theta
+\end{align*}
+So we can now evaluate the gradient respect to $J(\theta)$: 
+\begin{align*}
+    \nabla_\theta J(\theta) = X^TX\theta -X^T\Vec{y} + \lambda\theta
+\end{align*}
+Using the knowledge from lecture 2 that
+\begin{align*}
+    \nabla_\theta \frac{1}{2}\left(X\theta-\Vec{y}\right)^T\left(X\theta-\Vec{y}\right) = X^TX\theta -X^T\Vec{y}
+\end{align*}
+To find the optimization point, we want to set the gradient vector to zero \begin{align*}
+    \Vec{0} = &X^TX\theta -X^T\Vec{y} + \lambda\theta
+\end{align*}
+And then solve for $\theta$ to get
+\begin{align*}
+    \theta =& \left(X^TX+\lambda I\right)^{\minus1}X^T\Vec{y}
+\end{align*}
+\item Suppose that we want to use kernels to implicitly represent our feature vectors in a
+high-dimensional (possibly infinite dimensional) space. Using a feature mapping $\phi$,
+the ridge regression cost function becomes\begin{align*}
+     J(\theta) = \frac{1}{2}\left(X\theta-\Vec{y}\right)^T\left(X\theta-\Vec{y}\right) + \frac{\lambda}{2}\theta^T\theta
+\end{align*}Making a prediction on a new input $x_{new}$ would now be done by computing $\theta^T\phi (x_{new})$.
+Show how we can use the “kernel trick” to obtain a closed form for the prediction on the new input without ever explicitly computing $\phi (x_{new})$. You may assume that the parameter vector $\theta$ can be expressed as a linear combination of the input feature
+vectors; i.e.$ \sum_{i=1}^{m}\alpha_i \phi (x^{(i)})$ for some set of parameters $\alpha_i$.\\\\
+\textit{Answer:}\\
+From part a, we know that the optimized $\theta$ can be written as: \begin{align*}
+     \theta =& \left(X^TX+\lambda I\right)^{\minus1}X^T\Vec{y}
+\end{align*}
+By using the identity $\left(\lambda I +BA\right)^{\minus1}B = B\left(\lambda I +AB\right)^{\minus1}$ we can rewrite $\theta$ as: \begin{align*}
+    \theta =& X^T\left(XX^T+\lambda I\right)^{\minus1}\Vec{y}
+\end{align*}
+The kernel algorithm maps the feature matrix (training data set matrix) to a higher dimension before applying the linear classification algorithm. Therefore, we will denote the new feature matrix $\Phi$ with columns $\phi(x^{(i)})$. \\\\Then we can use our new feature matrix to redefine $\theta$ as follows: \begin{align*}
+    \theta =&{}\: \Phi^T\left(\Phi\Phi^T+\lambda I\right)^{\minus1}\Vec{y}
+\end{align*}
+We know that the kernel matrix is the covariance matrix of $\Phi$ with itself: $K = \Phi\Phi^T$. Therefore: \begin{align*}
+    \theta =&{}\: \Phi^T\left(K+\lambda I\right)^{\minus1}\Vec{y}
+\end{align*} 
+Given that the prediction on $x_{new}$ denoted $y_{new}$ = $\theta^T \phi(x_{new})$, we can substitute for $\theta$ and solve \begin{align*}
+    y_{new} = y^T\left(K+\lambda I\right)^{\minus1}\Phi \phi(x_{new})
+\end{align*} To use the assumption that that the parameter vector $\theta$ can be expressed as a linear combination of the input feature vectors, we rewrite $\theta$ in the form $ \sum_{i=1}^{m}\alpha_i \phi (x^{(i)})$ by defining some feature set $\alpha$.\\\\
+We can define the set of parameters $\alpha$ to be: $\left(K+\lambda I\right)^{\minus1}y$. Thus, \begin{align*}
+     y_{new}=\sum_{i=1}^{m}\alpha_i \phi (x^{(i)})^T \phi(x_{new})
+\end{align*}
+Finally, we can use the fact that the kernel function is defined as $K(x^{(i)},x_{new}) = \phi (x^{(i)})^T \phi(x_{new})$ to rewrite the equation as
+\begin{align*}
+     y_{new}=\sum_{i=1}^{m}\alpha_i K(x^{(i)},x_{new})
+\end{align*}
+\end{enumerate}
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%
+%   Problem 2   %
+%%%%%%%%%%%%%%%%%
+\section{Problem 2}
+\textbf{$l_2$ norm soft margin SV\\\\}
+In class, we saw that if our data is not linearly separable, then we need to modify our
+support vector machine algorithm by introducing an error margin that must be minimized.
+Specifically, the formulation we have looked at is known as the $l_1$ norm soft margin SVM.
+In this problem we will consider an alternative method, known as the $l_2$ norm soft margin
+SVM. This new algorithm is given by the following optimization problem (notice that the
+slack penalties are now squared:\begin{align*}
+    \min_{w,b,\xi} \quad &\frac{1}{2}||w||^2+\frac{C}{2}\sum_{i=1}^{m}x_i^2\\
+    \textrm{s.t.} \quad &y^{(i)}(w^Tx^{(i)}+b) \geq 1-\xi_i, i=1,\dots m
+\end{align*}
+
+\begin{enumerate}[label=(\alph*)]
+    \item Notice that we have dropped the $\xi_i \geq 0$ constraint in the $l_2$ problem. Show that these non-negativity constraints can be removed. That is, show that the optimal value of the objective will be the same whether or not these constraints are present.\\\\
+    \textit{answer:}\\
+    For any $\xi_i < 0$ that satisfies the convex constraint, the value $\xi_i = 0$ also satisfies the constraint and minimizes the objective function.
+    \item What is the Lagrangian of the $l_2$ soft margin SVM optimization problem?
+    \begin{equation*}
+        \mathcal{L}(w,b,\alpha, \xi) = \frac{1}{2}w^Tw + \frac{C}{2}\sum_{i=1}^{m}\xi_i^2-\sum_{i=1}^{m}\alpha_i[y^{(i)}(w^Tx^{(i)}+b)-1+\xi_i]
+    \end{equation*}
+    \item Minimize the Lagrangian with respect to $w$, $b$, and $\xi$ by taking the following gradients: $\nabla_w\mathcal{L}$, $\frac{\partial}{\partial b}\mathcal{L}$, and $\nabla_\xi\mathcal{L}$, and then setting them equal to 0.\\\\
+    \textit{answer:}
+    \begin{align*}
+        \nabla_w \mathcal{L} =&{} w - \sum_{i=1}^m\alpha_iy^{\supi{i}}x^{\supi{i}} \overset{set}=\: 0
+    \end{align*}
+    By using the fact that we set the gradient to $0$ we can solve for $w$
+    \begin{align*}
+        w =&{}\sum_{i=1}^m\alpha_iy^{\supi{i}}x^{\supi{i}}
+    \end{align*}
+    And solve for $b$ by taking the partial derivative
+    \begin{align*}
+        \frac{\partial}{\partial b}\mathcal{L} =&{} \sum_{i=1}^m\alpha_iy^{\supi{i}} = 0\\
+    \end{align*}
+    And finally solve for $\xi$ by taking the gradient
+    \begin{align*}
+        \nabla_\xi \mathcal{L} =&{} C\sum_{i=1}^m\xi_i - \sum_{i=1}^m\alpha_i =\: 0\\
+        C\sum_{i=1}^m\xi_i =&{}\sum_{i=1}^m\alpha_i
+    \end{align*}
+    \item What is the dual of the $l_2$ soft margin SVM optimization problem?\\\\
+    \textit{answer:} To compute the dual problem, we need to reparameterize the Lagrangian as a function of $w$ on $\alpha$ \begin{align*}
+        W(\alpha)=&\frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{m}(\alpha_i y^{\supi{i}}x^{\supi{i}})^T (\alpha_j y^{\supi{j}}x^{\supi{j}})+\frac{1}{2}\sum_{i=1}^{m}\frac{\alpha_i}{\xi_i}\xi_i^2\\
+        &\: -\sum_{i=1}^{m}\alpha_i\left[y^{\supi{i}}\left(\left(\sum_{j=1}^{m}(\alpha_j y^{\supi{j}}x^{\supi{j}})\right)^T x^{\supi{i}}+b\right)-1+\xi_i\right]\\
+        =&\frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_i\alpha_jy^{\supi{i}}y^{\supi{j}}(x^{\supi{i}})^Tx^{\supi{j}}+\frac{1}{2}\sum_{i=1}^{m}\alpha_i\xi_i-\sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_i\alpha_jy^{\supi{i}}y^{\supi{j}}(x^{\supi{i}})^Tx^{\supi{j}}\\&\:-b\sum_{i=1}^{m}a_iy^{\supi{i}} + \sum_{i=1}^{m}a_i-\sum_{i=1}^{m}\alpha_i\xi_i\\
+        =&\sum_{i=1}^{m}a_i-\frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_i\alpha_jy^{\supi{i}}y^{\supi{j}}(x^{\supi{i}})^Tx^{\supi{j}}-\frac{1}{2}\sum_{i=1}^{m}\alpha_i\xi_i\\
+        =&\sum_{i=1}^{m}a_i-\frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_i\alpha_jy^{\supi{i}}y^{\supi{j}}(x^{\supi{i}})^Tx^{\supi{j}}-\frac{1}{2}\sum_{i=1}^{m}\frac{\alpha_i^2}{C}
+    \end{align*} 
+   Now to formulate the dual optimization problem, we simply add the constraints derived in part c to our objective function\begin{align*}
+        \max_{\alpha }\quad &\sum_{i=1}^{m}a_i-\frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_i\alpha_jy^{\supi{i}}y^{\supi{j}}(x^{\supi{i}})^Tx^{\supi{j}}-\frac{1}{2}\sum_{i=1}^{m}\frac{\alpha_i^2}{C}\\
+        s.t. \quad &\sum_{i=1}^{m}a_iy^{\supi{i}}=0
+    \end{align*}
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%
+%   Problem 4   %
+%%%%%%%%%%%%%%%%%
+\section{Problem 3}
+\textbf{SVM with Gaussian kernel}\\\\
+Consider the task of training a support vector machine using the Gaussian kernel $K(x,z) = \exp(-||x-z||^2/\tau^2)$. We will show that as long as there are no two identical points in the
+training set, we can always find a value for the bandwidth parameter $\tau$ such that the SVM
+achieves zero training error.
+
+\begin{enumerate}[label=(\alph*)]
+\item Recall from class that the decision function learned by the support vector machine can be written as
+\begin{align*}
+    f(x) = \sum_{i=1}^{m}\alpha_iy\supi{i}K(x\supi{i},x)+b
+\end{align*}
+Assume that the training data $f\{(x\supi{1}, y\supi{1}),\dots , (x\supi{m}, y\supi{m})\}$ consists of points which
+are separated by at least a distance of $\epsilon$; that is, $||x\supi{j}-x\supi{i}||\geq \epsilon$ for any $i\neq j$.
+Find values for the set of parameters $\{\alpha_1, \dots, \alpha_m,b\}$ and Gaussian kernel width $\tau$ such that $x\supi{i}$ is correctly classified, for all $i=1, \dots, m$. [Hint: Let $\alpha_i=1$ for all i
+and $b=0$. Now notice that for $y\in \{-1,1\}$ the prediction on $x\supi{i}$ will be correct if $|f(x\supi{i})-y\supi{i}|<1$ , so find a value of $\tau$ that satisfies this inequality for all $i$.\\\\
+\textit{answer:}\\\\
+We will first let $\alpha_i = 1 \forall i$ and we will let $b = 0$. We notice here that since $y \in \{-1,+1\}$, the prediction on $x\supi{i}$ will be correct if $\Big|f\left(x\supi{i}\right)-y\supi{i}\Big| < 1$.\\\\
+Now we can substitute in our $f\left(x\supi{i} )\right)$ to get the equation
+\begin{align*}
+     \Big|f\left(x\supi{i}\right)-y\supi{i}\Big|= &\left|\left(\sum_{k=1}^{m}\alpha_ky\supi{k}K(x\supi{k},x\supi)+b\right)-y\supi{i}\right| <1\\
+   \Longrightarrow &\left|\left(\sum_{k=1}^{m}y\supi{k}K(x\supi{k},x\supi)\right)-y^\supi{i}\right| <1
+\end{align*}
+Substituting the Gaussian Kernel for K gives
+\begin{align*}
+    \left|\left(\sum_{k=1}^{m}y\supi{k}\exp\left(-\frac{||x\supi{k}-x\supi{i}||^2}{\tau^2}\right)\right)-y^\supi{i}\right| <1
+\end{align*}
+By pulling out $y^\supi{i}$ from the sum we get
+\begin{align*}
+    &\left|y\supi{i} + \left(\sum_{\substack{k=1\\k\neq i}}^{m} y\supi{k}\exp\left(-\frac{||x\supi{k}-x\supi{i}||^2}{\tau^2}\right)\right)-y^\supi{i}\right| <1\\
+    \Longrightarrow &\left|  \sum_{\substack{k=1\\k\neq i}}^{m} y\supi{k}\exp\left(-\frac{||x\supi{k}-x\supi{i}||^2}{\tau^2}\right)\right| <1
+\end{align*}
+Since each $y\supi{k}$ is either $-1$ or $+1$ in the worse case for the inequality all $y\supi{k}$s are the same.\\Essentially, $\sum_{k=1}^{m}y\supi{i}\leq |\sum_{k=1}^{m}y\supi{i} |$, and since $||x\supi{j}-x\supi{i}||\geq \epsilon$ for any $i\neq j$, we can write \begin{align*}
+    &\left|  \sum_{\substack{k=1\\k\neq i}}^{m} y\supi{k}\right|\exp\left(-\frac{\epsilon^2}{\tau^2}\right) <1\\
+    \Longrightarrow & (m-1)\exp\left(-\frac{\epsilon^2}{\tau^2}\right)<1
+\end{align*}
+Then we can solve for $\tau$:
+\begin{align*}
+    \tau <\frac{\epsilon}{\sqrt{\log (m-1)}}
+\end{align*}
+For simplification, we can choose: \begin{align*}
+    \tau = \frac{\epsilon}{\log m}
+\end{align*}
+\item Suppose we run a SVM with slack variables using the parameter $\tau$ you found in part (a). Will the resulting classifier necessarily obtain zero training error? Why or why not? A short explanation (without proof) will suffice. \\\\
+\textit{answer: }\\\\
+The classifier will obtain zero training error. We can verify this by observing that the SVM algorithm WITHOUT any slack variable will achieve zero training error if it can satisfy the convex constraint. If we can find a solution that satisfies the convex constraint without a slack variable, then we have proved that the classifier will still obtain zero training error. This is because in order to minimize the objective function, the algorithm will necessarily choose the slack variables to be equal to zero if possible.\\\\To do this we first observe that our convex constraint is
+\begin{align*}
+    y\supi{i}\left(w^Tx\supi{i} + b\right) = y\supi{i}f(x\supi{i}) > 1
+\end{align*}
+By using our $\tau$ from part (a) we can ensure that $y\supi{i}f(x\sup{i}) > 0 \;\forall i$ (meaning that every classification of $x\supi{i}$ is correct), and therefore we can take each $\alpha_i$ to be large enough to satisfy the inequality. Since we can satisfy this constraint, it is clear that we can satisfy the same constraint with a slack variable.
+
+\item Suppose we run the SMO algorithm to train an SVM with slack variables, under the conditions stated above, using the value of $\tau$ you picked in the previous part, and using some arbitrary value of $C$ (which you do not know beforehand). Will this necessarily result in a classifier that achieve zero training error? Why or why not? Again, a short explanation is sufficient.\\\\
+\textit{answer}: \\\\
+The classifier will not be able to obtain zero training error because there exists a constant $C$ in front of $(C\sum_{i=1}^{m}\xi_i)$ for which we have no information on. If the constant $C$ happened to be $\leq 0$, then the minimization of the objective function could be achieved with non-zero slack variables.
+\end{enumerate}
+\section{Problem 5}
+\textbf{Uniform convergence}\\
+In class we proved that for any finite set of hypotheses $\mathcal{H} = \{h_1,\dots, h_k\}$, if we pick the hypothesis $\hat{h}$ that minimizes the training error on a set of m examples, then with probability at least $1-\delta$,\begin{align*}
+    \epsilon(\hat{h})\leq \left(\min_{i}\epsilon(h_i)\right)+2\sqrt{\frac{1}{2m}\log\frac{2k}{\delta}}
+\end{align*}where $\epsilon(h_i)$ is the generalization error of hypothesis $h_i$. Now consider a special case (often called the \textit{realizable} case) where we know, a priori, that there is some hypothesis in our class $\mathcal{H}$ that achieves zero error on the distribution from which the data is drawn. Then we could obviously just use the above bound with $\min_i\epsilon(h_i)=0$; however, we can prove a better bound than this.
+
+\begin{enumerate}[label=(\alph*)]
+    \item Consider a learning algorithm which, after looking at $m$ training examples, chooses some hypothesis $\hat{h}\in \mathcal{H}$ that makes zero mistakes on this training data. (By our assumption, there is at least one such hypothesis, possibly more.) Show that with probability $1-\delta$\begin{align*}
+        \epsilon(\hat{h})\leq \frac{1}{m}\log\frac{k}{\delta}
+    \end{align*}
+    Notice that since we do not have a square root here, this bound is much tighter. [Hint: Consider the probability that a hypothesis with generalization error greater than $\gamma$ makes no mistakes on the training data. Instead of the Hoeffding bound, you might also find the following inequality useful: $(1-\gamma)m\leq e^{-\gamma m}$].\\\\
+    \textit{answer:}\\\\
+The problem states that the probability that $h$ incorrectly predicts some training example $(x\supi{i}, y\supi{i})$ from the distribution $D$ is $\gamma$. Therefore we have that \begin{align*}
+    P(h\in \mathcal{H} \text{ that h predicts correctly})=1-\gamma
+\end{align*}
+For $h$ to predict correctly $m$ times, once for each training example, we have \begin{align*}
+    P( h\in \mathcal{H} \text{ that h predicts correctly m times})=(1-\gamma)^m \leq e^{-\gamma m}
+\end{align*}
+Since there are total $k$ hypothesis in $\mathcal{H}$, \begin{align*}
+    P(\forall h\in \mathcal{H} \text{ that h predicts correctly m times})=k(1-\gamma)^m \leq ke^{-\gamma m}
+\end{align*}
+After setting this probability to $\delta$ and solving for $\gamma$ we obtain the following:\begin{align*}
+    &ke^{-\gamma m} = \delta\\
+    \Longrightarrow &\gamma = \frac{1}{m}\log\frac{k}{\delta}
+\end{align*}
+From the lecture we know that $|\hat{\epsilon}(\hat{h})-\epsilon(\hat{h})|> \gamma$ with probability $1-\delta$, therefore since $\hat{\epsilon}{(\hat{h})}= 0$ we obtain the inequality \begin{align*}
+    \epsilon(\hat{h})\leq \frac{1}{m}\log\frac{k}{\delta}
+\end{align*}
+    \item Rewrite the above bound as a sample complexity bound, i.e., in the form: for fixed $\delta$ and $\gamma$, for $\epsilon(\hat{h}) \leq \gamma$ to hold with probability at least $(1 - \delta)$, it suffices that $m \leq f(k,\gamma,\delta)$.
+    \textit{answer:}\\\\
+    From part (a) we have that $\gamma \leq \frac{1}{m}\log\frac{k}{\delta}$ We now simply need to rewrite this as an inequality on $m$ as follows
+    \begin{align*}
+        m \leq \frac{1}{\gamma}\log\frac{k}{\delta}
+    \end{align*}
+\end{enumerate}
+
+\end{document}
