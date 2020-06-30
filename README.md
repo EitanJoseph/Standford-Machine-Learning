@@ -1,2 +1,8 @@
-# Caroline-Eitan
-Github Co-Project
+# Coursework for CS229 Machine Learning
+## Taught by Prof. Andrew Ng
+### Caroline Wang - Eitan Joseph
+
+This repository contains all the coursework for Prof. Andrew Ng's CS229 ML class seperated into folders for different problem sets.
+Each problem set contains a Latex file with extension .tex and some other file for hands-on application such as a MATLAB file.
+
+To view the a .tex file just open it in some Latex interpreter. All .tex files were written in [Overleaf](https://www.overleaf.com/).
