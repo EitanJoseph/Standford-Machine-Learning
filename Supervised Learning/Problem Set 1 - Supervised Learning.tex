@@ -1,0 +1,297 @@
+\documentclass{article}
+
+\usepackage{enumitem}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{mathrsfs}
+\usepackage{amsmath,amsthm,hyperref}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\DeclareMathOperator{\Tr}{tr}
+\usepackage{bbm}
+
+% Margins
+\usepackage[top=2.5cm, left=3cm, right=3cm, bottom=4.0cm]{geometry}
+% Colour table cells
+\usepackage[table]{xcolor}
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' /
+
+% my new commands
+\newcommand\partialkj{\frac{\partial^2}{\partial\theta_k\partial\theta_j}}
+\makeatletter
+\newcommand*\bigcdot{\mathpalette\bigcdot@{.5}}
+\newcommand*\bigcdot@[2]{\mathbin{\vcenter{\hbox{\scalebox{#2}{$\m@th#1\bullet$}}}}}
+\makeatother
+\newcommand{\minus}{\scalebox{0.5}[1.0]{$-$}}
+\newcommand{\zero}{\scalebox{0.6}[0.75]{$^{(0)}$}}
+\newcommand{\supi}[1]{\scalebox{0.6}[0.75]{$^{(#1)}$}}
+\newcommand{\bigDash}{\scalebox{3.0}[1.0]{$-$}}
+
+%%%%%%%%%%%%%%%%%
+%     Title     %
+%%%%%%%%%%%%%%%%%
+\title{Problem Set #1: Supervised Learning}
+\author{Eitan Joseph \and Caroline Wang}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%
+%   Problem 1   %
+%%%%%%%%%%%%%%%%%
+\section{Problem 1}
+\textbf{Newton’s method for computing least squares\\\\}
+In this problem, we will prove that if we use Newton’s method solve the least squares optimization problem, then we only need one iteration to converge to $\theta$.
+\begin{enumerate}[label=(\alph*)]
+    \item Find the Hessian of the cost function $J(\theta) = \frac{1}{2}\sum_{i=1}^{m}\left(\theta^T x^{(i)}-y^{(i)}\right )^2$.\\
+    \textit{answer:}
+    \begin{align*}
+        H_k_j = \partialkj J(\theta) = \partialkj \frac{1}{2}\sum_{i=1}^{m}\left(\theta^T x^{(i)}-y^{(i)}\right )^2 = \frac{\partial}{\partial\theta_k} \sum_{i=1}^{m}\left(\theta^T x^{(i)}-y^{(i)}\right )(x_j^{(i)}) = \sum_{i=1}^{m}x_k^{(i)}x_j^{(i)} 
+    \end{align*}
+    The sum can be understood as $x_k^{(i)}\bigcdot x_j^{(i)}\quad \forall i$
+    \begin{align*}
+         H = X^TX
+    \end{align*}
+    \item Show that the first iteration of Newton’s method gives us $\theta^* = \left(X^TX\right)^{\minus1}X^T\Vec{y}$, the
+solution to our least squares problem.\\
+    \textit{answer:}
+    \begin{align*}
+        &&\text{The first iteration of Newton's Method is given by}
+        &&\theta^* = \theta^{\zero} - H^{\minus1}\nabla_{\theta^{\zero}} J(\theta^{\zero}) \\
+        &&\text{Via lecture 2 we know that}
+        &&\nabla_\theta J(\theta) = X^TX\theta - X^T\Vec{y}\\
+        &&\text{Which means we need to solve}
+        &&\theta^* = \theta^{\zero} - H^{\minus1}\left(X^TX\theta^{\zero} - X^T\Vec{y}\right)\\
+        &&\text{We can substitute our result from part (a) to get}
+        &&\theta^* = \theta^{\zero} - \left(X^TX\right)^{\minus1}\left(X^TX\theta^{\zero} - X^T\Vec{y}\right)\\
+        &&\text{This reduces to}
+        &&\theta^* = \left(X^TX\right)^{\minus1}X^T\Vec{y}
+    \end{align*}
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%
+%   Problem 3   %
+%%%%%%%%%%%%%%%%%
+\section{Problem 3}
+\textbf{Multivariate least squares\\\\}
+So far in class, we have only considered cases where our target variable $y$ is a scalar value. Suppose that instead of trying to predict a single output, we have a training set with multiple outputs for each example:\\
+\begin{align*}
+    \{(x^{\supi{i}}y^{\supi{i}}),i=1,...,m\},\; x^{\supi{i}}\in\mathbb{R}^n,\; y^{\supi{i}}\in\mathbb{R}^p
+\end{align*}
+Thus for each training example, $y^{\supi{i}}$ is vector-valued, with p entries. We wish to use a linear model to predict the outputs, as in least squares, by specifying the parameter matrix $\Theta$ in
+\begin{align*}
+    y = \Theta^Tx \text{, where }\Theta \in \mathbb{R}^{n\times p}
+\end{align*}
+
+\begin{enumerate}[label=(\alph*)]
+    \item The cost function for this case is
+    \begin{align*}
+        J(\Theta) = \frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{p}\left((\Theta^T x^{\supi{i}})_j - y_j^{\supi{i}}\right)^2
+    \end{align*}
+    Write $J(\Theta)$ in matrix-vector notation (i.e., without using any summations).\\
+    \begin{center}
+    $X=$
+        \begin{bmatrix}
+            \bigDash && (x^{(1)})^T && \bigDash\\
+            \bigDash && (x^{(2)})^T && \bigDash\\
+            && \vdots &&\\
+            \bigDash && (x^{(m)})^T && \bigDash\\
+        \end{bmatrix}
+    \end{center}
+    and the $m\times p$ target matrix
+    \begin{center}
+    $Y=$
+        \begin{bmatrix}
+            \bigDash && (y^{(1)})^T && \bigDash\\
+            \bigDash && (y^{(2)})^T && \bigDash\\
+             && \vdots &&\\
+            \bigDash && (y^{(m)})^T && \bigDash\\
+        \end{bmatrix}
+    \end{center}
+    \textit{answer:}
+    \begin{align*}
+        J(\Theta) &{}= \frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{p}\left((\Theta^T x^{\supi{i}})_j - y_j^{\supi{i}}\right)^2\\ 
+        &{}= \frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{p}\left(X\Theta - Y\right)^2_{i,j}\\
+        &{}= \frac{1}{2}\sum_{j=1}^{p}\left(X\Theta - Y\right)^T\left(X\Theta - Y\right)_{j,j}\\
+        &{}= \frac{1}{2}\Tr\left(\left(X\Theta - Y\right)^T\left(X\Theta - Y\right)\right)
+    \end{align*}
+    \item  Find the closed form solution for Θ which minimizes $J(\Theta)$. This is the equivalent to the normal equations for the multivariate case.\\\\
+    \textit{answer:}\\
+    We now have an optimization problem of the form:
+    \begin{align*}
+        \min_{\Theta}\;J(\Theta)
+    \end{align*}
+    We can solve this by setting the gradient of $J(\Theta)$ to 0 and solving for $\Theta$.
+    \begin{align*}
+        \nabla_{\Theta}J(\Theta) &{}= \frac{1}{2}\nabla_{\Theta}\Tr\left(\left(X\Theta - Y\right)^T\left(X\Theta - Y\right)\right)\\
+        &{}=\frac{1}{2}\nabla_{\Theta}\Tr\left(\Theta^TX^TX\Theta - \Theta^TX^TY - Y^TX\Theta + Y^TY\right)\\
+        % maybe make a note here that you need to use the property of trace and gradient
+        &{}=\frac{1}{2}\left(\nabla_{\Theta}\Tr\Theta^TX^TX\Theta - 2\nabla_{\Theta}\Tr\Theta^TX^TY + \nabla_{\Theta}\Tr Y^TY\right)\\
+        &{}=\frac{1}{2}\left(X^TX\Theta + X^TX\Theta - 2\nabla_{\Theta}\Tr\Theta^TX^TY\right)\\
+        &{}=X^TX\Theta - X^TY 
+    \end{align*}
+    Now after setting this result to 0 we get
+    \begin{align*}
+        &{}X^TX\Theta - X^TY = 0\\
+        &{}\Theta = \left(X^TX\right)^{\minus1} X^TY
+    \end{align*}
+    \item Suppose instead of considering the multivariate vectors $y^{\supi{i}}$ all at once, we instead compute each variable $y^{\supi{i}}_j$ separately for each $j = 1,\dots, p$. In this case, we have a $p$ individual linear models, of the form
+    \begin{align*}
+        y^{\supi{i}}_j = \theta^T_jx^{\supi{i}},\;j = 1,\dots, p. 
+    \end{align*}
+    How do the parameters from these $p$ independent least squares problems compare to the multivariate solution?\\\\
+    \textit{answer:}\\
+    We first realize that $\Theta$ can be written in terms of each $\theta_j$s as
+    \begin{align*}
+        \sum_{i=1}^p
+        \begin{bmatrix}
+            \theta_i^{\supi{1}}\mathbbm{1}\{i=1\} & \theta_i^{\supi{1}}\mathbbm{1}\{i=2\} & \dots & \theta_i^{\supi{1}}\mathbbm{1}\{i=p\} \\
+            \theta_i^{\supi{2}}\mathbbm{1}\{i=1\} & \theta_i^{\supi{2}}\mathbbm{1}\{i=2\} & \dots & \theta_i^{\supi{2}}\mathbbm{1}\{i=p\} \\
+            \vdots &\vdots &\ddots &\vdots\\
+            \theta_i^{\supi{n}}\mathbbm{1}\{i=1\} &\theta_i^{\supi{n}}\mathbbm{1}\{i=2\} &\dots &\theta_i^{\supi{n}}\mathbbm{1}\{i=p\}
+        \end{bmatrix}_{n\times p}
+         = 
+        \begin{bmatrix}
+            \theta_1 &\theta_2 &\dots &\theta_p
+        \end{bmatrix}
+    \end{align*}
+    Combining this with the original result of part (b) gives us
+    \begin{align*}
+        \begin{bmatrix}
+            \theta_1 &\theta_2 &\dots &\theta_p
+        \end{bmatrix}
+        &{}= \begin{bmatrix}
+            \left(X^TX\right)^{\minus1} X^T\Vec{y_1} &\left(X^TX\right)^{\minus1} X^T\Vec{y_2} &\dots &\left(X^TX\right)^{\minus1} X^T\Vec{y_p}
+        \end{bmatrix}\\
+        &{}= \left(X^TX\right)^{\minus1} X^T
+        \begin{bmatrix}
+            \Vec{y_1} &\Vec{y_2} &\dots &\Vec{y_p}
+        \end{bmatrix}\\
+        &{}= \left(X^TX\right)^{\minus1} X^TY\\
+        &{}= \Theta
+    \end{align*}
+    This result implies that evaluating the parameters separately yields the same result as evaluating them together.
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%
+%   Problem 4   %
+%%%%%%%%%%%%%%%%%
+\section{Problem 4}
+\textbf{Naive Bayes\\\\}
+In this problem, we look at maximum likelihood parameter estimation using the naive Bayes assumption. Here, the input features $x_j, j = 1,\dots, n$ to our model are discrete, binary-valued variables, so $x_j \in \{0, 1\}.$ We call $x = [x_1 x_2 \dots x_n]^T$ to be the input vector. For each training example, our output targets are a single binary-value $y \in \{0, 1\}$. Our model is then parameterized by $\phi_{j|y=0} = p(x_j = 1|y = 0)$, $\phi_{j|y=1} = p(x_j = 1|y = 1)$, and
+$\phi_y = p(y = 1)$. We model the joint distribution of (x, y) according to
+\begin{align*}
+    p(y) \quad=&{}\quad (\phi_y)^y(1-\phi_y)^{1-y}\\
+    p(x|y=0) \quad=&{}\quad \prod_{j=1}^n p(x_j|y=0)\\
+    =&{}\quad \prod_{j=1}^n(\phi_{j|y=0})^{x_j}(1-\phi_{j|y=0})^{1-x_j}\\
+    p(x|y=1) \quad=&{}\quad \prod_{j=1}^n p(x_j|y=1)\\
+    =&{}\quad \prod_{j=1}^n(\phi_{j|y=1})^{x_j}(1-\phi_{j|y=1})^{1-x_j}\\
+\end{align*}
+\begin{enumerate}[label=(\alph*)]
+    \item Find the joint likelihood function $\ell(\varphi) = \log\prod_{i=1}^mp(x^{\supi{i}}, y^{\supi{i}};\varphi)$ in terms of the model parameters given above. Here, $\varphi$ represents the entire set of parameters $\{\phi_y, \phi_{j|y=0}, \phi_{j|y=1} | j = 1,\dots,n\}$.\\\\
+    \textit{answer:}
+    \begin{align*}
+        \ell(\varphi) =&{} \log\prod_{i=1}^mp(x^{\supi{i}}, y^{\supi{i}};\varphi)\\
+        =&{}\log\prod_{i=1}^m\left(\prod_{j=1}^{n_i}p(x_j^{\supi{i}}|y^{\supi{i}};\varphi)\right)p(y^{\supi{i}};\varphi)\\
+        =&{}\sum_{i=1}^m\left(\log p(y^{\supi{i}};\varphi) + \log\prod_{j=1}^{n_i}p(x_j^{\supi{i}}|y^{\supi{i}};\varphi)\right)\\
+         =&{}\sum_{i=1}^m\left(\log p(y^{\supi{i}};\varphi) + \sum_{j=1}^{n_i}\log p(x_j^{\supi{i}}|y^{\supi{i}};\varphi)\right)\\
+         =&{}\sum_{i=1}^m\left(\log\left((\phi_y)^{y^{\supi{i}}}(1-\phi_y)^{1-y^{\supi{i}}}\right) + \sum_{j=1}^{n_i}\log\left( (\phi_{j|y})^{x_j}(1-\phi_{j|y})^{1-x_j}\right)\right)\\
+         =&{}\sum_{i=1}^m\left(y^{\supi{i}}\log(\phi_y) + (1-y^{\supi{i}})\log(1-\phi_y) + \sum_{j=1}^{n_i}x_j\log (\phi_{j|y})+(1-x_j)\log(1-\phi_{j|y})\right)
+    \end{align*}
+    \item Show that the parameters which maximize the likelihood function are the same as those given in the lecture notes.\\\\
+    \textit{answer:}\\\\
+    To find the maximum $\phi_y$ that maximizes the likelihood function, we will set the gradient with respect to $\phi_y$ of the result above to zero.
+    \begin{align*}
+       &{}\nabla_{\phi_y} \sum_{i=1}^m\left(y^{\supi{i}}\log(\phi_y) + (1-y^{\supi{i}})\log(1-\phi_y) + \sum_{j=1}^{n_i}x_j\log (\phi_{j|y})+(1-x_j)\log(1-\phi_{j|y})\right) \overset{set}= 0\\
+       =&{}\quad \nabla_{\phi_y} \sum_{i=1}^my^{\supi{i}}\log(\phi_y) + (1-y^{\supi{i}})\log(1-\phi_y)\\
+       =&{}\quad \sum_{i=1}^m\frac{y^{\supi{i}}}{\phi_y} - \frac{1-y^{\supi{i}}}{1-\phi_y}\\
+       =&{}\quad\sum_{i=1}^my^{\supi{i}}(1-\phi_y) - \phi_y(1-y^{\supi{i}})\\
+       =&{}\quad\sum_{i=1}^my^{\supi{i}} - \phi_y = 0\\
+       \implies&{}\quad\sum_{i=1}^my^{\supi{i}} = \sum_{i=1}^m\phi_y\\
+       \implies&{}\quad\sum_{i=1}^my^{\supi{i}} = m\phi_y\\
+       \implies&{}\quad\phi_y = \frac{\sum_{i=1}^m\mathbbm{1}\{y^{\supi{i}} = 1\}}{m}
+    \end{align*}
+    Similarly for $\phi_{j|y}$ we can do the same thing and solve
+    \begin{align*}
+       &{}\nabla_{\phi_{j|y}} \sum_{i=1}^m\left(y^{\supi{i}}\log(\phi_y) + (1-y^{\supi{i}})\log(1-\phi_y) + \sum_{j=1}^{n_i}x_j\log (\phi_{j|y})+(1-x_j)\log(1-\phi_{j|y})\right) \overset{set}= 0\\
+       =&{}\quad \sum_{i=1}^m\frac{x_j^{\supi{i}}}{\phi_{j|y}} - \frac{1-x_j^{\supi{i}}}{1-\phi_{j|y}} = 0\\
+       =&{}\quad \sum_{i=1}^m x_j^{\supi{i}}(1-\phi_{j|y}) - \phi_{j|y}(1-x_j^{\supi{i}}) = 0\\
+       =&{}\quad \sum_{i=1}^m x_j^{\supi{i}} - \phi_{j|y} = 0
+    \end{align*}
+    We can now separate this into two cases.\\\\
+    $\phi_{j|y=0}$:
+    \begin{align*}
+        &{}\sum_{i=1}^m (x_j^{\supi{i}} - \phi_{j|y=0})\mathbbm{1}\{y^{\supi{i}} = 0\} = 0\\
+        \implies&{}\sum_{i=1}^m x_j^{\supi{i}}\mathbbm{1}\{y^{\supi{i}} = 0\} = \sum_{i=1}^m \phi_{j|y=0}\mathbbm{1}\{y^{\supi{i}} = 0\}\\
+        \implies&{}\phi_{j|y=0} =  \frac{\sum_{i=1}^m x_j^{\supi{i}}\mathbbm{1}\{y^{\supi{i}} = 0\}}{ \sum_{i=1}^m\mathbbm{1}\{y^{\supi{i}} = 0\}}\\
+        \implies&{}\phi_{j|y=0} =  \frac{\sum_{i=1}^m\mathbbm{1}\{x_j^{\supi{i}} = 0 \wedge y^{\supi{i}} = 0\}}{ \sum_{i=1}^m\mathbbm{1}\{y^{\supi{i}} = 0\}}
+    \end{align*}
+    $\phi_{j|y=1}$:
+    \begin{align*}
+        &{}\sum_{i=1}^m (x_j^{\supi{i}} - \phi_{j|y=1})\mathbbm{1}\{y^{\supi{i}} = 1\} = 0\\
+        \implies&{}\sum_{i=1}^m x_j^{\supi{i}}\mathbbm{1}\{y^{\supi{i}} = 1\} = \sum_{i=1}^m \phi_{j|y=1}\mathbbm{1}\{y^{\supi{i}} = 1\}\\
+        \implies&{}\phi_{j|y=1} =  \frac{\sum_{i=1}^m x_j^{\supi{i}}\mathbbm{1}\{y^{\supi{i}} = 1\}}{ \sum_{i=1}^m\mathbbm{1}\{y^{\supi{i}} = 1\}}\\
+        \implies&{}\phi_{j|y=1} =  \frac{\sum_{i=1}^m\mathbbm{1}\{x_j^{\supi{i}} = 1 \wedge y^{\supi{i}} = 1\}}{ \sum_{i=1}^m\mathbbm{1}\{y^{\supi{i}} = 1\}}
+    \end{align*}
+    
+    %commenting out this question
+    \iffalse
+    \item Consider making a prediction on some new data point $x$ using the most likely class estimate generated by the naive Bayes algorithm. Show that the hypothesis returned by Naive Bayes is a linear classifier—i.e., if $p(y = 0|x)$ and $p(y = 1|x)$ are the class probabilities returned by naive Bayes, show that there exists some $\theta\inR^{n+1}$ such that
+    \begin{align*}
+        p(y = 1|x) \geq p(y = 0|x) \iff \theta^{T} \begin{bmatrix}
+            1\\
+            x
+        \end{bmatrix} \geq 0
+    \end{align*}
+    \fi
+
+\end{enumerate}
+\section{Problem 5}
+\textbf{Exponential family and the geometric distribution}\\
+\begin{enumerate}[label=(\alph*)]
+    \item Consider the geometric distribution parameterized by $\phi$:\begin{align*}
+        p(y;\phi)=(1-\phi)^{y-1}\phi, \quad j=1,2,3\dots
+    \end{align*}Show that the geometric distribution is in the exponential family, and give $b(y)$, $\eta$, $T(y)$ and $a(\eta)$.\\\\
+    \textit{answer:}\\\\
+    Recall that to be a member of the exponential family distribution, a distribution's PDF must be in the form $p(y;\phi ) = b(y)\exp[T(y)\cdot \eta-a(\eta)]$. \\\\Here we have
+    \begin{align*}
+        p(y;\phi)=&(1-\phi)^{y-1}\phi\\
+        =&\exp[\log(1-\phi)^{y-1} + \log(\phi)]\\
+        =&\exp[(y-1)\log(1-\phi) + \log(\phi)]\\
+        =&\exp[y\log (1-\phi)-\log(1-\phi)+\log(\phi)]
+    \end{align*}Which can be decomposed as\begin{align*}
+        &b(y)=1\\
+        &\eta = \log (1-\phi)\\
+        &T(y) = y\\
+        &a(\eta)=-\eta +\log (1-e^\eta)
+    \end{align*}
+    \item Consider performing regression using a GLM model with a geometric response variable. What is the canonical response function for the family? You may use the fact that the mean of a geometric distribution is given by $1/\phi$.\\\\
+    \textit{answer}:\begin{align*}
+        g(\eta) = E[y;\phi ] = \frac{1}{\phi } = \frac{1}{1-e^\eta}
+    \end{align*}
+    \item For a training set $\{(x^{(i)}, y^{(i)}); i=1,\dots m\}$, let the log-likelihood of an example be $\log p(y^{(i)}|x^{(i)};\theta)$. By taking the derivative of the log-likelihood with respect to, derive the stochastic gradient ascent rule for learning using a GLM model with geometric responses y and the canonical response function.\\\\
+    \textit{answer:}\\\\
+    The log-likelihood of $\theta$ with respect to a training example $(x^{(i)}, y^{(i)})$ is defined as $l_i(\theta) = \log p(y\supi{i} | x\supi{i}; \theta)$. We use the GLM assumption that $\eta = \theta^Tx$. Therefore, we obtain \begin{align*}
+        l_i(\theta ) =& \log [\exp(\theta^Tx\supi{i}\cdot y\supi{i}-\theta^Tx\supi{i} +\log(1-e^{\theta^Tx\supi{i}}))]\\
+        =&\log [\exp(\theta^Tx\supi{i}\cdot y\supi{i}-\log(e^{\theta^Tx\supi{i}}) +\log(1-e^{\theta^Tx\supi{i}}))]\\
+        =&\log \left[\exp\left(\theta^Tx\supi{i}\cdot y\supi{i}-\log\left(\frac{e^{\theta^Tx\supi{i}}}{1-e^{\theta^Tx\supi{i}}}\right)\right) \right]\\
+        =&\log \left[\exp\left(\theta^Tx\supi{i}\cdot y\supi{i}-\log\left(\frac{1}{e^{-\theta^Tx\supi{i}}-1}\right)\right) \right]\\
+        =&\theta^Tx\supi{i}\cdot y\supi{i} +\log \left(e^{-\theta^Tx\supi{i}}-1\right)
+    \end{align*}Then we want to take the gradient respect to $\theta_j$\begin{align*}
+        \nabla_{\theta_j} =& x\supi{i}_j\cdot y\supi{i}+\frac{e^{-\theta^Tx\supi{i}}}{e^{-\theta^Tx\supi{i}}-1}(-x\supi{i}_j)\\
+        =& x\supi{i}_j \left(y\supi{i}-\frac{e^{-\theta^Tx\supi{i}}}{e^{-\theta^Tx\supi{i}}-1}\right)\\
+        =&x\supi{i}_j \left(y\supi{i}-\frac{1}{1-e^{\theta^Tx\supi{i}}}\right)
+    \end{align*}Finally, we can derive the stochastic gradient ascent update rule \begin{align*}
+        \theta_j \coloneqq \theta_j + \alpha\left(x\supi{i}_j \left(y\supi{i}-\frac{1}{1-e^{\theta^Tx\supi{i}}}\right)\right)
+    \end{align*}
+\end{enumerate}
+\end{document}
