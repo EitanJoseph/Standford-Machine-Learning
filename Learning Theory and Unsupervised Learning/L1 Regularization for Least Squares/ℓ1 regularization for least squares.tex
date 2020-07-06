@@ -1,0 +1,107 @@
+\documentclass{article}
+
+\usepackage{enumitem}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{mathrsfs}
+\usepackage{amsmath,amsthm,hyperref}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\DeclareMathOperator{\Tr}{tr}
+\usepackage{bbm}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% Margins
+\usepackage[top=2.5cm, left=3cm, right=3cm, bottom=4.0cm]{geometry}
+% Colour table cells
+\usepackage[table]{xcolor}
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' /
+
+% my new commands
+\newcommand\partialkj{\frac{\partial^2}{\partial\theta_k\partial\theta_j}}
+\makeatletter
+\newcommand*\bigcdot{\mathpalette\bigcdot@{.5}}
+\newcommand*\bigcdot@[2]{\mathbin{\vcenter{\hbox{\scalebox{#2}{$\m@th#1\bullet$}}}}}
+\makeatother
+\newcommand{\minus}{\scalebox{0.5}[1.0]{$-$}}
+\newcommand{\zero}{\scalebox{0.6}[0.75]{$^{(0)}$}}
+\newcommand{\supx}[1]{\scalebox{0.6}[0.75]{$^{(#1)}$}}
+\newcommand{\supi}{\scalebox{0.6}[0.75]{$^{(i)}$}}
+
+\newcommand{\bigDash}{\scalebox{3.0}[1.0]{$-$}}
+
+
+
+%%%%%%%%%%%%%%%%%
+%     Title     %
+%%%%%%%%%%%%%%%%%
+\title{Problem Set #3: Learning Theory and Unsupervised Learning}
+\author{Eitan Joseph \and Caroline Wang}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%
+%   Problem 1   %
+%%%%%%%%%%%%%%%%%
+\section*{Problem 3}
+\textbf{1-norm regularization for least squares}\\
+In the previous problem set, we looked at the least squares problem where the objective function is augmented with an additional regularization term $\lambda||\theta||_2^2$. In this problem we’ll consider a similar regularized objective but this time with a penalty on the $\ell_1$ norm of the parameters $\lambda||\theta||_1$, where $||\theta||_1$ is defined as $\sum_i|\theta_i|$ That is, we want to minimize the objective
+\begin{align*}
+    J(\theta) = \frac{1}{2}\sum_{i=1}^m(\theta^Tx\supi-y\supi)^2 + \lambda\sum_{i=1}^n|\theta_i|
+\end{align*}
+There has been a great deal of recent interest in $\ell_1$ regularization, which, as we will see, has the benefit of outputting sparse solutions (i.e., many components of the resulting $\theta$ are equal to zero).
+
+The $\ell_1$ regularized least squares problem is more difficult than the unregularized or $\ell_2$ regularized case, because the $\ell_1$ term is not differentiable. However, there have been many efficient algorithms developed for this problem that work very well in practice. One very straightforward approach, which we have already seen in class, is the coordinate descent method. In this problem you’ll derive and implement a coordinate descent algorithm for $\ell_1$ regularized least squares, and apply it to test data.
+\begin{enumerate}[label=(\alph*)]
+    \item Here we’ll derive the coordinate descent update for a given $\theta_i$. Given the $X$ and $y$ matrices, as defined in the class notes, as well a parameter vector $\theta$, how can we adjust $\theta_i$ so as to minimize the optimization objective? To answer this question, we’ll rewrite the optimization objective above as
+    \begin{align*}
+        J(\theta) = \frac{1}{2}||X\theta - y||^2_2 + ||\theta||_1 = \frac{1}{2}||X\overline{\theta} +X_i\theta_i - y||^2_2 + \lambda||\overline{\theta}||_1 + \lambda|\theta_i|
+    \end{align*}
+    where $X_i \in \mathbb{R}^m$ denotes the \textit{i}th column of $X$ and $\overline{\theta}$ is equal to $\theta$ except with $\overline{\theta}_i = 0$; all we have done in rewriting the above expression is to make the $\theta_i$ term explicit in the objective. However, this still contains the $|\theta_i|$ term, which is non-differentiable and therefore difficult to optimize. To get around this we make the observation that the sign of $\theta_i$ must either be non-negative or non-positive. But if we knew the sign of $\theta_i$, then $|\theta_i|$ becomes just a linear term. That, is, we can rewrite the objective as
+    \begin{align*}
+    J(\theta) = \frac{1}{2}||X\overline{\theta} + X_i\theta_i - y||^2_2 + \lambda||\overline{\theta}||_1 + \lambda s_1 \theta_i
+    \end{align*}
+    where $s_i$ denotes the sign of $\theta_i$, $s_i \in \{-1, 1\}$. In order to update $\theta_i$, we can just compute the optimal $\theta_i$ for both possible values of $s_i$ (making sure that we restrict the optimal $\theta_i$ to obey the sign restriction we used to solve for it), then look to see which achieves the best objective value.
+    
+    For each of the possible values of $s_i$, compute the resulting optimal value of $\theta_i$.\\\\
+    \textit{answer:}\\\\
+    First we will look at the $s_i = 1$ case. We then want to compute the partial derivative with respect to $\theta_i$ of our objective function while substituting $s_i = 1$.
+    \begin{align*}
+        \frac{\partial}{\partial\theta_i}J(\theta) =&{}  \frac{\partial}{\partial\theta_i}\left(\frac{1}{2}(X\overline{\theta} + X_i\theta_i - y)^T(X\overline{\theta} + X_i\theta_i - y) + \lambda\theta_i + \lambda||\overline{\theta}||_1\right)\\
+        =&{} \frac{\partial}{\partial\theta_i}\left(\frac{1}{2}((X\overline{\theta} - y)^T + (X_i\theta_i)^T)((X\overline{\theta} - y) + (X_i\theta_i)) + \lambda\theta_i + \lambda||\overline{\theta}||_1\right)\\
+        =&{} \frac{\partial}{\partial\theta_i}\left(\frac{1}{2}(||X\overline{\theta} - y||_2^2 + 2(X\overline{\theta} - y)^TX_i\theta_i + X_i^TX_i\theta_i^2) + \lambda\theta_i + \lambda||\overline{\theta}||_1\right)\\
+        =&{} \frac{1}{2}(2(X\overline{\theta} - y)^TX_i + 2X_i^TX_i\theta_i) + \lambda\\
+        =&{} (X\overline{\theta} - y)^TX_i + X_i^TX_i\theta_i + \lambda\\
+        \overset{set}{=}&{}\; 0
+    \end{align*}
+    By setting this final equation to zero when can derive our first new update rule
+    \begin{align*}
+        \theta_i = (X_i^TX_i)^{-1}((y-X\overline{\theta})^TX_i - \lambda)
+    \end{align*}
+    For the $s_i = -1$ case it is easy enough to recognize that by flipping the sign of $\lambda$ we get our second update rule
+    \begin{align*}
+        \theta_i = (X_i^TX_i)^{-1}((\lambda - (X\overline{\theta}-y)^TX_i)
+    \end{align*}
+    Our last step is to clip both of these rules such that $\theta_i$ always lies in the allowable range - that is $\theta_i > 0$.\\\\
+    For the positive case we have
+    \begin{align*}
+        \theta_i =&{} \max\left\{(X_i^TX_i)^{-1}((y-X\overline{\theta})^TX_i - \lambda),0\right\}
+    \end{align*}
+    and for the negative
+    \begin{align*}
+        \theta_i =&{} \min\left\{(X_i^TX_i)^{-1}((\lambda - (X\overline{\theta}-y)^TX_i),0\right\}
+    \end{align*}
+    where we use min instead of max because a very negative number maximizes due to the implicit absolute value.
+\end{enumerate}
+\end{document}
