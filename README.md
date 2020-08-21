@@ -12,5 +12,5 @@ To view the a _.tex_ file just open it in some Latex interpreter. All _.tex_ fil
 Note: We corrected many of the problem set solutions throughout the course - there are some incorrect solutions/typos in the actual coursework. You can find notes ont he corrections throughout the repository.
 
 If you have any questions you can shoot either of us an email at
-*eitanjoseph@brandeis.edu
-*jywangcaroline@brandeis.edu
+-eitanjoseph@brandeis.edu
+-jywangcaroline@brandeis.edu
