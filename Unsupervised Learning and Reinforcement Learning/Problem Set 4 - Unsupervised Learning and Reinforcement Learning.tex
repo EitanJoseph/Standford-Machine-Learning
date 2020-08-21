@@ -1,0 +1,444 @@
+\documentclass{article}
+
+\usepackage{enumitem}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{mathrsfs}
+\usepackage{amsmath,amsthm,hyperref}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\DeclareMathOperator{\Tr}{tr}
+\usepackage{bbm}
+\usepackage{dsfont}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\Tr}{Tr}
+
+% Margins
+\usepackage[top=2.5cm, left=3cm, right=3cm, bottom=4.0cm]{geometry}
+% Colour table cells
+\usepackage[table]{xcolor}
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' /
+
+% my new commands
+\newcommand\partialkj{\frac{\partial^2}{\partial\theta_k\partial\theta_j}}
+\makeatletter
+\newcommand*\bigcdot{\mathpalette\bigcdot@{.5}}
+\newcommand*\bigcdot@[2]{\mathbin{\vcenter{\hbox{\scalebox{#2}{$\m@th#1\bullet$}}}}}
+\makeatother
+\newcommand{\minus}{\scalebox{0.5}[1.0]{$-$}}
+\newcommand{\zero}{\scalebox{0.6}[0.75]{$^{(0)}$}}
+\newcommand{\supx}[1]{\scalebox{0.6}[0.75]{$^{(#1)}$}}
+\newcommand{\supi}{\scalebox{0.6}[0.75]{$^{(i)}$}}
+\newcommand{\sumim}{\begin{align*}
+    \sum_{i=1}^m
+\end{align*}
+}
+\newcommand{\sumzi}{\begin{align*}
+    \sum_{z\supi}
+\end{align*}
+}
+
+\newcommand{\bigDash}{\scalebox{3.0}[1.0]{$-$}}
+
+
+
+%%%%%%%%%%%%%%%%%
+%     Title     %
+%%%%%%%%%%%%%%%%%
+\title{Problem Set #4:  Unsupervised Learning and Reinforcement Learning}
+\author{Eitan Joseph \and Caroline Wang}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%
+%   Problem 1   %
+%%%%%%%%%%%%%%%%%
+\section*{Problem 1}
+\textbf{EM for supervised learning}\\
+In class we applied EM to the unsupervised learning setting. In particular, we represented $p(x)$ by marginalizing over a latent random variable \begin{align*}
+    p(x) = \sum_{z} p(x,z) = \sum_{z} p(x|z)p(z)
+\end{align*}
+However, EM can also be applied to the supervised learning setting, and in this problem we discuss a “mixture of linear regressors” model; this is an instance of what is often call the Hierarchical Mixture of Experts model. We want to represent $p(y|x)$, $x\in \mathbb{R}^n$ and $y\in\mathbb{R}$, and we do so by again introducing a discrete latent random variable
+\begin{align*}
+    p(y|x) = \sum_z p(y,z|x) = \sum_{z} p(y|x,z) p(z|x) 
+\end{align*}
+For simplicity we’ll assume that z is binary valued, that p(y|x, z) is a Gaussian density, and that $p(y|x)$ is given by a logistic regression model. More formally
+\begin{align*}
+    p(z|x;\phi ) =& g(\phi^Tx)^z(1-g(\phi^Tx))^{1-z}\\
+    p(y|x,z = i; \theta_i) = &\frac{1}{\sqrt{2\pi}\sigma}\exp\left(\frac{-(y-\theta_i^Tx)^2}{2\sigma^2}\right)\quad i = 0,1
+\end{align*}where $\sigma$ is a known parameter and $\phi, \theta_0, \theta_1 \in \mathbb{R}$ are parameters of the model (here we use the subscript on $\theta $ to denote two different parameter vectors, not to index a particular entry in these vectors).\\
+Intuitively, the process behind model can be thought of as follows. Given a data point $x$, we first determine whether the data point belongs to one of two hidden classes $z=0$ or $z = 1$, using a logistic regression model. We then determine $y$ as a linear function of $x$ (different linear functions for different values of z) plus Gaussian noise, as in the standard
+linear regression model. For example, the following data set could be well-represented by the model, but not by standard linear regression.
+\begin{enumerate}[label=(\alph*)]
+    \item Suppose $x$, $y$, and $z$ are all observed, so that we obtain a training set
+${(x\supx{1}, y\supx{1}, z\supx{1}), . . . , (x\supx{m}, y\supx{m}, z\supx{m})}$. Write the log-likelihood of the parameters,
+and derive the maximum likelihood estimates for $\phi$, $\theta_0$, and $\theta_1$. Note that because $p(z|x)$ is a logistic regression model, there will not exist a closed form estimate of $\phi$. In this case, derive the gradient and the Hessian of the likelihood with respect to $\phi$; in practice, these quantities can be used to numerically compute the ML estimate.\\\\
+    \textit{answer: }\\\\
+    The log-likelihood can be written as
+    \begin{align*}
+         \ell(\phi,\theta_0, \theta_1)  =& \sumim \log p(y\supi|x\supi;\phi,\theta_0, \theta_1)\\
+         = & \sumim \log p(y\supi |x\supi, z\supi;\theta_0, \theta_1 )p(z\supi | x\supi;\phi)\\
+         =& \sumim \mathds{1}\{z\supi=0\}\log \left((1-g(\phi^Tx\supi))\left(\frac{1}{\sqrt{2\pi}\sigma}\exp\left(\frac{-(y\supi-\theta_k^Tx\supi)^2}{2\sigma^2}\right)\right)\right)\\ &+ \sumim \mathds{1}\{z\supi=1\}\log \left((g(\phi^Tx\supi))\left(\frac{1}{\sqrt{2\pi}\sigma}\exp\left(\frac{-(y\supi-\theta_1^Tx\supi)^2}{2\sigma^2}\right)\right)\right)
+    \end{align*}
+    The maximum likelihood estimation for $\theta_k$ can be derived by taking the gradient with respect to $\theta_k$ and setting the result to zero.\begin{align*}
+        \nabla_{\theta_0}\ell(\phi,\theta_0, \theta_1) \overset{\mathrm{set}}{=}0
+    \end{align*}
+    Then by extracting the non-relevant constants to $\theta_k$: \begin{align*}
+        &{}\nabla_{\theta_k}\sumim-(y-\theta_k^Tx\supi)^2 = 0\\
+        &{}\sumim-2(y\supi-\theta_k^Tx\supi)\cdot x\supi=0\\
+        \implies&{}\sumim x\supi y\supi= \sumim \theta_k^Tx\supi^Tx\supi \\
+        \implies&{}X^T\Vec{y} = \theta_k^T X^TX\\
+        \implies&{}\theta_k = (X^TX)^{-1}X^T\Vec{y}
+    \end{align*}Therefore the specific estimations for $\theta_0$ and $\theta_1$ are: \begin{align*}
+        \theta_0 = (X_0^TX_0)^{-1}X_0^T\Vec{y_0}\\
+        \theta_1 = (X_1^TX_1)^{-1}X_1^T\Vec{y_1}
+    \end{align*}
+    Where $X_0$, $y_0$, $X_1$, $y_1$ are the associated matrices and vectors derived in each of the two separate summations that combine to equal all of $z$.\\
+    
+    The next step is to find the gradient vector and the Hessian matrix respect with respect to $\phi$.\\
+    We can once again remove the terms not relating to $\phi$:\begin{align*}
+        \nabla_{\phi } \ell(\phi,\theta_0, \theta_1)=& \nabla_{\phi}\sumim \mathds{1}\{z\supi=0\}\log (1-g(\phi^Tx\supi))+ \sumim \mathds{1}\{z\supi=1\}\log((g(\phi^Tx\supi))\\
+        =& \nabla_{\phi} \sumim (1-z\supi) \log (1-g(\phi^Tx\supi))+ z\supi \log((g(\phi^Tx\supi))
+    \end{align*}
+    From previous classes, the derivative of a sigmoid is known to be $\frac{\partial}{\partial z}g(z) = g(z)(1-g(z))$, therefore \begin{align*}
+        \nabla_{\phi }\ell(\phi,\theta_0, \theta_1) = &\sumim - \frac{1-z\supi}{(1-g(\phi^Tx\supi))}\frac{\partial}{\partial \phi}g(\phi^Tx\supi)\cdot x\supi + \frac{z\supi}{g(\phi^Tx\supi)}\frac{\partial}{\partial \phi}g(\phi^Tx\supi)\cdot x\supi\\
+        =& \sumim - \frac{1-z\supi}{(1-g(\phi^Tx\supi))}g(\phi^Tx\supi)(1-g(\phi^Tx\supi))\cdot x\supi + \frac{z\supi}{g(\phi^Tx\supi)}g(\phi^Tx\supi)(1-g(\phi^Tx\supi))\cdot x\supi\\
+        =& \sumim -(1-z\supi)g(\phi^Tx\supi) \cdot x\supi + z\supi(1-g(\phi^Tx\supi))\cdot x\supi\\
+        =& \sumim x\supi (z\supi -g(\phi^Tx\supi))
+    \end{align*}
+    Finally, this tells us that the gradient is\begin{align*}
+        \nabla_{\phi }\ell(\phi,\theta_0, \theta_1) = X^T(\Vec{z}-\Vec{g})\quad \text{where} \quad \Vec{g}_i = g(\phi^Tx\supi)
+    \end{align*}
+    Based on the linear algebra review sheet, the Hessian Matrix can be derived by taking the derivative of the gradient, which is equivalent to looking at each $i$th entry of the gradient vector, taking the gradient of that entry, and setting that to be the $i$th column of the Hessian. The $i$th entry of the gradient vector is \begin{align*}
+        x\supi^T \cdot (\Vec{z} -\Vec{g})
+    \end{align*}and after taking the derivative with respect to that $i$th entry we get \begin{align*}
+        \nabla_{\phi} x\supi^T (\Vec{z} -\Vec{g}) = x\supi^T  (\Vec{g}\cdot (1-\Vec{g}))\cdot x\supi 
+    \end{align*}Which gives the matrix \begin{align*}
+        H = X^TDX\quad \text{where} \quad D_{ii} = g(\phi^Tx\supi)(1-g(\phi^Tx\supi))
+    \end{align*}
+    \item Now suppose $z$ is a latent (unobserved) random variable. Write the log-likelihood of the parameters, and derive an EM algorithm to maximize the log-likelihood. Clearly specify the E-step and M-step (again, the M-step will require a numerical solution, so find the appropriate gradients and Hessians). \\\\
+     \textit{answer: }\\\\
+     The log-likelihood can now be written as
+     \begin{align*}
+         \ell(\phi,\theta_0, \theta_1) 
+         &{}= \sumim\log p(y\supi|x\supi;\phi,\theta_0, \theta_1)\\
+         &{}= \sumim\log p(y\supi|x\supi,z\supi;\theta_0, \theta_1) p(z\supi|x\supi;\phi)\\
+         &{}= \sumim\log \left(\left(1-g(\phi^Tx\supi)\right)^{1-z\supi}\left(\frac{1}{\sqrt{2\pi}\sigma}\exp\left(\frac{-(y\supi-\theta_k^Tx\supi)^2}{2\sigma^2}\right)\right)\right) \\&+ \log \left(\left(g(\phi^Tx\supi)^{z\supi}\right)\left(\frac{1}{\sqrt{2\pi}\sigma}\exp\left(\frac{-(y\supi-\theta_1^Tx\supi)^2}{2\sigma^2}\right)\right)\right)
+     \end{align*}
+     Since each $z\supi$ is unobserved they cannot be separated explicitly into two cases - this is because we have no way of knowing how to separate the summation into two groups for each cluster of $z\supi$ values when their values are hidden.\\
+     
+     In order to derive the new EM algorithm, instead of explicitly maximizing $\ell$ we will use the same approach as explained in class which will be to repeatedly construct a lower-bound on $\ell$ (E-step), and then optimize that lower-bound (M-step). \\
+     
+     In order to accomplish this, we first define $Q_i$ to be the distribution over $z_i$ for all $i$ (implying $\sum_z Q_i(z) = 1$ and $Q_i(z) \geq 0$). Next we write the following:
+     \begin{align}
+         \sumim\log p(y\supi|x\supi;\phi,\theta_0, \theta_1)&{}=
+         \sumim \log\sum_{z\supi} Q_i(z\supi)\frac{p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi|x\supi;\phi)}{Q_i(z\supi)}\\
+         &{}\geq\sumim\sum_{z\supi} Q_i(z\supi)\log\frac{p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi|x\supi;\phi)}{Q_i(z\supi)}
+     \end{align}
+     Where step (2) utilizes Jensen's Inequality.\\\\
+     We note here that the term
+     \begin{align*}
+         \sum_{z\supi} Q_i(z\supi)\frac{p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi|x\supi;\phi)}{Q_i(z\supi)}
+     \end{align*}
+     is just the expectation over the quantity 
+     \begin{align*}
+        \frac{p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi|x\supi;\phi)}{Q_i(z\supi)}
+     \end{align*}
+     according to the distribution $Q_i$. By Jensen's Inequality we know that
+     \begin{align*}
+         f\left(\mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[\frac{p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi|x\supi;\phi)}{Q_i(z\supi)}\right]\right) \geq \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[f\left(\frac{p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi|x\supi;\phi)}{Q_i(z\supi)}\right)\right]
+     \end{align*}
+     Since (2) holds true for any set of distributions $Q_i$ we can choose a specific distribution for $Q_i$ which makes the inequality hold with equality at $\phi$, $\theta_0$, $\theta_1$. Since Jensen's Inequality holds with equality over a constant valued random variable it suffices to find $Q_i(z\supi) = c \times p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi|x\supi;\phi) $ for some $c \in \mathbb{R}, c \neq 0$. We can solve for $Q_i(z\supi)$ using many iterations of Bayes' Theorem as follows:
+     \begin{align*}
+         Q_i(z\supi) &{}=
+         \frac{p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi|x\supi;\phi)}{\sum_{z\supi}p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi|x\supi;\phi)}\\
+         &{}=\frac{p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi|x\supi;\phi)}{p(y\supi|x\supi;\theta_0, \theta_1)}\\
+         &{}=\frac{p(y\supi|x\supi, z\supi;\theta_0, \theta_1)p(z\supi, x\supi;\phi)}{p(y\supi|x\supi;\theta_0, \theta_1)p(x\supi;\phi)}\\
+         &{}=\frac{p(y\supi, x\supi, z\supi;\phi, \theta_0, \theta_1)}{p(y\supi, x\supi;\phi, \theta_0, \theta_1)}\\
+         &{}= p(z\supi|x\supi, y\supi;\phi, \theta_0, \theta_1)
+     \end{align*}
+     With this solved we can now write the following EM algorithm
+     \begin{align*}
+         \text{(E-step) For each i, j set}\\
+         &{}w_j^{(i)} := p(z\supi = j | x\supi, y\supi;\phi,\theta_j)\\
+         \text{(M-step) Update the parameters of}\\
+         &{}\sumim\sum_j w_j^{(i)}\log\frac{p(y\supi|x\supi, z\supi;\theta_j)p(z\supi|x\supi;\phi)}{w_j^{(i)}}
+     \end{align*}
+     In order to maximize the equation in the M-step with respect to the parameters $\phi$, $\theta_0$, $\theta_1$ we need to take the gradient with respect to each parameter and set the resulting expression to zero. We can first generalize the $\theta$s as one gradient and solve
+     \begin{align*}
+         \nabla_{\theta_k}\sumim\sum_j w_j^{(i)}\log\frac{p(y\supi|x\supi, z\supi;\theta_j)p(z\supi|x\supi;\phi)}{w_j^{(i)}} \overset{set}= 0
+     \end{align*}
+     After dividing out all the non variable multipliers and taking the gradient we are left with the equation
+     \begin{align*}
+         &{}\sumim-2(y\supi-\theta_k^Tx\supi)x\supi^T w_k^{(i)} = 0\\
+         \implies&{}\sumim x\supi^T w_k^{(i)}y\supi - x\supi^T w_k^{(i)}\theta_k^Tx\supi = 0\\
+         \implies&{}\sumim x\supi^T w_k^{(i)}\theta_k^Tx\supi = \sumim x\supi^T w_k^{(i)}y\supi\\
+         \implies&{}\sumim x\supi^T w_k^{(i)}\theta_k^Tx\supi = \sumim x\supi^T w_k^{(i)}y\supi\\
+        \implies&{}\theta_k^T\sumim x\supi^T w_k^{(i)}x\supi = \sumim x\supi^T w_k^{(i)}y\supi\\
+        \implies&{}\theta_k^T =  \sumim (x\supi^T w_k^{(i)}x\supi)^{-1}x\supi^T w_k^{(i)}y\supi\\
+        \implies&{}\theta_k = (X^T W X)^{-1}X^TWy \quad \text{where} \quad W_{i,i} = w_k^{(i)}\\
+    \end{align*}
+     Finally we must derive the gradient vector and Hessian matrix \begin{align*}
+         &\nabla_{\phi } \sumim\sum_j w_j^{(i)}\log\frac{p(y\supi|x\supi, z\supi;\theta_j)p(z\supi|x\supi;\phi)}{w_j^{(i)}}\\
+         =&\nabla_{\phi }\sumim w_0^{(i)}\log (1-g(\phi^Tx\supi))+ w_1^{(i)} \log((g(\phi^Tx\supi))
+     \end{align*}
+     Since $w_0^{(i)}=1-w_1^{(i)}$ we have\begin{align*}
+         &\nabla_{\phi }\sumim (1-w_1^{(i)})\log (1-g(\phi^Tx\supi))+ w_1^{(i)} \log((g(\phi^Tx\supi))\\
+         =&\sum_ix\supi (w_1^{(i)} -g(\phi^Tx\supi))
+     \end{align*}The matrix representation turns out to be \begin{align*}
+         \nabla_{\phi } = X^T (\Vec{w}-\Vec{g})\quad \text{where} \quad\Vec{g}_i = g(\phi^Tx\supi)
+     \end{align*}
+    Finding the Hessian for $\phi$ in part (b), yields the same result as part (a) \begin{align*}
+         H = X^TDX\quad \text{where}\quad D_{i,i} = g(\phi^Tx\supi)(1-g(\phi^Tx\supi))
+     \end{align*}
+\end{enumerate}
+\section*{Problem 2}
+\textbf{Factor Analysis and PCA}\\
+In this problem we look at the relationship between two unsupervised learning algorithms we discussed in class: Factor Analysis and Principle Component Analysis.\\
+Consider the following joint distribution over (x, z) where $z\in \mathbb{R}^k$ is a latent random variable\begin{align*}
+    z\quad &\sim \quad \mathscr{N}(0,I)\\
+    x|z\quad &\sim \quad \mathscr{N}(Uz,\sigma^2I)
+\end{align*}
+where $U\in \mathbb{R}^k$ is a model parameters and $\sigma^2$ is assumed to be a known constant. This model is often called Probabilistic PCA. Note that this is nearly identical to the factor analysis model except we assume that the variance of $x|z$ is a known scaled identity matrix rather than the diagonal parameter matrix $\Phi$, and we do not add an additional $\mu$ term to
+the mean (though this last difference is just for simplicity of presentation). However, as we will see, it turns out that as $\sigma^2 \xrightarrow[]{}0$, this model is equivalent to PCA.\\
+For simplicity, you can assume for the remainder of the problem that $k = 1$, i.e., that $U$ is a column vector in $\mathbb{R}^n$.
+\begin{enumerate}[label=(\alph*)]
+\item Use the rules for manipulating Gaussian distributions to determine the joint distribution over $(x, z)$ and the conditional distribution of $z|x$. [Hint: for later parts of
+this problem, it will help significantly if you simplify your solution for the conditional distribution using the identity we first mentioned in problem set #1: $(\lamba I+BA)^{-1}B =
+B(\lambada I + AB)^{-1}.]$\\\\
+    \textit{answer:}\\\\
+    According to the definition of $x$, the expectation of $x$ is \begin{align*}
+        E[x] = E[Uz+\epsilon] = UE[z] + E[\epsilon] = 0
+    \end{align*} 
+    where $\epsilon \sim \mathscr{N}(0,\sigma^2I)$ indicates the added covariance noise.
+    We can now obtain the four different components of the matrix $\Sigma$ using the substitution $x=Uz+\epsilon$\begin{align*}
+        \Sigma_{zz} =& E[zz^T] = I\\
+        \Sigma_{xz} =& E[(Uz+\epsilon)z^T] = (UE[zz^T] + E[\epsilon z^T]) = U\\
+        \Sigma_{zx} =& E[z(Uz+\epsilon)^T] = U^TE[zz^T] + E[z\epsilon^T] = U^T\\
+        \Sigma_{xx} =& E[(Uz+\epsilon)(Uz+\epsilon)^T] = UU^TE[zz^T]+UE[z\epsilon^T] + U^TE[\epsilon z^T]+E[\epsilon\epsilon^T] = UU^T +\sigma^2I
+    \end{align*}
+    Therefore our join distribution is written
+    \begin{align*}
+        \begin{bmatrix}z \\ x\end{bmatrix}\quad \sim \quad  \mathscr{N}\left(\begin{bmatrix}0 \\ 0\end{bmatrix}, \begin{bmatrix}I & U^T \\ U & UU^T+\sigma^2I\end{bmatrix}\right)
+    \end{align*} Then we can apply the formula to define the conditional distribution $z|x \sim \mathscr{N}(\mu_{z|x}, \Sigma_{z|x})$ such that \begin{align*}
+        \mu_{z|x} =& \mu_z+\Sigma_{zx}\Sigma_{xx}^{-1}x = U^T(UU^T+\sigma^2I)^{-1}x = \frac{U^Tx}{UU^T+\sigma^2}\\
+        \Sigma_{z|x} =& \Sigma_{zz}-\Sigma_{zx}\Sigma_{xx}^{-1}\Sigma_{xz} = I-U^T(UU^T+\sigma^2I)^{-1}U = 1-\frac{U^TU}{UU^T+\sigma^2}
+    \end{align*}
+    In conclusion, \begin{align*}
+        z|x \quad \sim \quad \mathscr{N}\left(\frac{U^Tx}{UU^T+\sigma^2}, 1-\frac{U^TU}{UU^T+\sigma^2}\right)
+    \end{align*}
+\item Using these distributions, derive an EM algorithm for the model. Clearly state the E-step and the M-step of the algorithm.\\\\
+    \textit{answer:}\\\\
+    For the E-step, we need to compute $Q_i(z\supi)$ where 
+    \begin{align*}
+        Q_i(z\supi) = p(z\supi |x\supi ;U) 
+    \end{align*}
+   For the M-step we need to maximize the equation \begin{align*}
+        &\sumim \int_{z\supi}Q_i(z\supi)\log\frac{p(x\supi,z\supi: U)}{Q_i(z\supi)}\\
+        =&\sumim \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[\log p(x\supi |z\supi; U)+\log p(z\supi ) -\log(Q_i(z\supi))\right]
+    \end{align*}Then we take the gradient with respect to $U$ and set it to $0$ in order to maximize the equation above.
+    \begin{align*}
+        &\sumim \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}[\log p(x\supi |z\supi; U)]\\
+        =&\sumim \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[\log\frac{1}{\sqrt{2\pi^n}|\sigma^2I|}\exp \left(-\frac{1}{2\sigma^2}(x\supi -Uz\supi)^T(x\supi-Uz\supi)\right)\right]\\
+        =&\sumim \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[\frac{1}{2}\log|\sigma^2I|-\frac{n}{2}\log(2\pi)-\frac{1}{2\sigma^2}(x\supi -Uz\supi)^T(x\supi-Uz\supi)\right]
+    \end{align*}We can drop the terms not dependent on $U$ before taking the gradient. \begin{align*}
+        &\nabla_U\sumim \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[\frac{1}{2\sigma^2}(x\supi -Uz\supi)^T(x\supi-Uz\supi)\right]\\
+        =&-\frac{1}{2\sigma^2}\sumim \nabla_U\mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[\Tr  z\supi^TU^TUz\supi-2\Tr z\supi^TUx\supi\right]\\
+        =&-\frac{1}{2\sigma^2}\sumim \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[2z\supi z\supi^TU^T-2z\supi^Tx\supi\right]\\
+        =&-\frac{1}{\sigma^2}\sumim \left[U\mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}[z\supi z\supi^T]-x\supi\mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}[z\supi^T]\right]\overset{\mathrm{set}}{=}0\\
+        \implies &U = \left(\sumim x\supi \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}[z\supi^T]\right)\left(\sumim \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}[z\supi z\supi^T]\right)^{-1}
+    \end{align*}From the definition of $Q_i$ being Gaussian we know that \begin{align*}
+    \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}[z\supi^T] =& \mu_{z\supi|x\supi}^T\\
+    \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}[z\supi z\supi^T] =& \mu_{z\supi|x\supi}\mu_{z\supi|x\supi}^T
+    \end{align*}Therefore, the final update of the M-step is \begin{align*}
+        U=\left(\sumim \:x\supi\mu_{z\supi|x\supi}^T\right)\left(\sumim \mu_{z\supi|x\supi}\mu_{z\supi|x\supi}^T\right)^{-1}
+    \end{align*}
+\item As $\sigma^2 \xrightarrow[]{}0$, show that if the EM algorithm convergences to a parameter vector $U^*$ (and such convergence is guaranteed by the argument presented in class), then $U^*$ must be an eigenvector of the sample covariance matrix $\Sigma = \frac{1}{m}\sum x\supi x\supi^T$
+— i.e., $U^*$ must satisfy
+\begin{align*}
+    \lambda U^* = \Sigma U^*
+\end{align*}
+    \textit{answer:}\\\\
+    The first thing to notice is that as $\sigma^2 \xrightarrow[]{}0$ the E-step only needs to compute the means and not the variances, since $\Sigma_{z|x}\xrightarrow[]{}0$ as well. If we let $w \in \mathbb{R}^m$ be the vector that contains all the means such that $w_i = \mu_{z\supi|x\supi}$ then we can compute the new E-step to be
+    \begin{align}
+        w_i = \mu_{z\supi|x\supi} =&{} U^T(\sigma^2 I - UU^T)^{-1}(Uz\supi + \epsilon)\\
+        =&{} U^T (UU^T)^{-1}x\supi\\
+        =&{} \frac{U^Tx\supi}{UU^T}\\
+        =&{} \frac{x\supi^TU}{U^TU}
+    \end{align}
+    Where step (6) uses the fact that step (5) yields a Real. When this is written in matrix form we see that
+    \begin{align*}
+        w = \frac{XU}{U^TU}
+    \end{align*}
+    Next we need to derive the new M-step. We can use the result from (b) in order to obtain the new update rule
+    \begin{align}
+        U &{}= \left(\sumim \:x\supi\mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[z\supi^T\right]\right)\left(\sumim \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[z\supi z\supi^T\right]\right)^{-1}\\
+        &{}= \left(\sumim \:x\supi\mu_{z\supi|x\supi}^T\right)\left(\sumim \mu_{z\supi|x\supi}\mu_{z\supi|x\supi}^T\right)^{-1}\\
+        &{}= \left(\sumim \:x\supi w_i\right)\left(\sumim w_i w_i\right)^{-1}
+    \end{align}
+    Where step (8) is derived from the definition of $Q_i$ being Guassian with mean $\mu_{z\supi|x\supi}$ and variance $\Sigma_{z\supi|x\supi}$ yielding
+    \begin{align*}
+        \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[z\supi^T\right] &{}= \mu_{z\supi|x\supi}^T\\
+        \mathop{\mathbb{E}}_{z\supi \mathtt{\sim} Q_i}\left[z\supi z\supi^T\right] &{}= \mu_{z\supi|x\supi}\mu_{z\supi|x\supi}^T + \Sigma_{z\supi|x\supi}
+    \end{align*}
+    Now to write expression (9) in matrix form we see that
+    \begin{align*}
+        \left(\sumim w_i w_i\right)^{-1} &{}= \frac{1}{w^Tw}
+    \end{align*}
+    however to write the numerator in matrix form will be a little more difficult. We want to represent that each column of $X$ from $i\in{1,...,m}$ gets multiplied by its the $i$th entry of $w$ and then summed together. We cannot simply write this as $X^Tw$ so we will instead have to construct a new diagonal matrix $W$ where $W_{i,i} = w_i$. Then, by multiplying $XW$ we get
+    \begin{align*}
+        XW &{}=
+        \begin{bmatrix}
+        | & | & &|\\
+        x\supx{1} & x\supx{2} & \dots & x\supx{m}\\
+        | & | & &|
+        \end{bmatrix}_{n\times m}
+        \begin{bmatrix}
+        w_1 & & &\\
+        & w_2 & &\\
+        & & \ddots &\\
+        & & & w_m
+        \end{bmatrix}_{m\times m}\\
+        &{}= \begin{bmatrix}
+        | & | & &|\\
+        w_1x\supx{1} & w_2x\supx{2} & \dots & w_mx\supx{m}\\
+        | & | & &|
+        \end{bmatrix}_{n\times m}
+    \end{align*}
+    Next we just need to sum up each column of $XW$ which we can accomplish by constructing new vector $\Vec{1}\in \mathbb{R}^m$ such that $\Vec{1}_i = 1$ for all $i\in{1,...,m}$ and transforming it according to $XW$ as follows
+    \begin{align*}
+    XW\Vec{1} &{}= \begin{bmatrix}
+        | & | & &|\\
+        w_1x\supx{1} & w_2x\supx{2} & \dots & w_mx\supx{m}\\
+        | & | & &|
+        \end{bmatrix}_{n\times m}
+    \begin{bmatrix}
+        1\\
+        \vdots\\
+        1
+    \end{bmatrix}_{m\times1}\\
+    &{}= \left(\sumim \:x\supi w_i\right)
+    \end{align*}
+    Finally we can write the expression for U in matrix form
+    \begin{align*}
+        U = \frac{XW\Vec{1}}{w^T w}
+    \end{align*}
+    We know that $U$ has converged when its value has not changed after the E-step, so we can substitute our value for $w$ in the E-step and set it equal to our original U.
+    \begin{align*}
+        &{}U = \frac{XW\Vec{1}}{\frac{U^TX^T XU }{(U^TU)^2}}\\
+        \implies&{}(U^TX^T XU)U = (U^TU)^2 XW\Vec{1}\\
+        \implies&{}X^TXU = U^TU XW\Vec{1}\\
+        \implies&{}X^TXU = UU^T XW\Vec{1} = U^T XW\Vec{1}U\\
+        \implies&{}\Sigma U = \lambda U
+    \end{align*}
+    where we know that $\Sigma = X^TX$ and we take $\lambda = U^T XW\Vec{1} \in \mathbb{R}$ and therefore proving the desired result.
+\end{enumerate}
+\section*{Problem 4}
+    \textbf{Convergence of Policy Iteration}\\
+    In this problem we show that the Policy Iteration algorithm, described in the lecture notes, is guaranteed to find the optimal policy for an MDP. First, define $B^\pi$ to be the Bellman operator for policy $\pi$, defined as follows: if $V^\prime = B(V)$, then\begin{align*}
+        V^\prime (s) = R(s)+\gamma \sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime )V(s^\prime)
+    \end{align*}
+\begin{enumerate}[label=(\alph*)]
+\item Prove that if $V_1(s) \leq  V_2(s$) for all $s\in \mathcal{S}$, then $B(V_1)(s) \leq  B(V_2)(s)$ for all $s\in \mathcal{S}$.\\\\
+\textit{answer:}\\\\
+Given that $V_1(s) \leq  V_2(s$) for all $s\in \mathcal{S}$, we can also write the inequality
+\begin{align*}
+    &R(s) + V_1(s^\prime) \leq R(s) + V_2(s^\prime)\\
+    \implies& R(s) + \gamma \sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime )V_1(s^\prime) \leq R(s) + \gamma \sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime )V_2(s^\prime)
+\end{align*}
+However, it turns out that
+\begin{align*}
+    &R(s) + \gamma \sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime )V_1(s^\prime) = B(V_1)(s)\\
+    &R(s) + \gamma \sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime )V_2(s^\prime) = B(V_2)(s)
+\end{align*}
+So we have shown that $B(V_1)(s) \leq B(V_2)(s)$ for all $s \in \mathcal{S}$
+\item Prove that for any $V$, \begin{align*}
+    ||B^\pi(V)-V^\pi ||_\infty\leq \gamma ||V-V^\pi ||_\infty
+\end{align*}where $||V||_\infty = \max_{s\in \mathcal{S}}|V(s)|$. Intuitively, this means that applying the Bellman operator $B^\pi $ to any value function $V$, brings that value function “closer” to the value function for $\pi, V^\pi $. This also means that applying $B^\pi $ repeatedly (an infinite number of times):\begin{align*}
+    B^\pi(B^\pi (B^\pi\dots B^\pi(V)\dots ))) 
+\end{align*}will result in the value function $V^\pi$.\\\\
+\textit{answer:}\\\\
+We can first observe that 
+\begin{align*}
+    ||B^\pi(V)-V^\pi ||_\infty &= \max_{s\in \mathcal{S}}\big |R(s)+\gamma \sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime )V(s^\prime)-R(S)-\gamma \sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime )V^\pi(s^\prime)\big |\\
+    &= \gamma \max_{s\in \mathcal{S}}\big |\sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime )(V(s^\prime)-V^\pi (s^\prime))\big |
+\end{align*}
+Then since $P_{s,a}$ is a probability distribution it must be true that \begin{align}
+    P_{s,\pi(s)}(s^\prime )\geq 0\\
+    \sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime) = 1
+\end{align} 
+we can apply the fact that for any $a, x\in \mathbb{R}^n$, if $\sum_i a_i = 1$, and $a_i\geq 0$, then $\sum_i a_ix_i\leq \max_i x_i$ to (10) and (11) to write
+\begin{align*}
+    \gamma \max_{s\in \mathcal{S}}\big |\sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime )(V(s^\prime)-V^\pi (s^\prime))\big |\leq \gamma\max_{s^\prime\in \mathcal{S}} |V(s^\prime)-V^\pi(s^\prime)|
+\end{align*}
+Which is, by definition, the same inequality as
+\begin{align*}
+     ||B^\pi(V)-V^\pi ||_\infty\leq \gamma ||V-V^\pi ||_\infty
+\end{align*}
+\item Now suppose that we have some policy $\pi$, and use Policy Iteration to choose a new policy $\pi\prime$ according to
+\begin{align*}
+    \pi^\prime(s) = \argmax_{a\in A}\sum_{s^\prime\in S}P_{s,a}(s^\prime)V^\pi (s^\prime)
+\end{align*}
+Show that this policy will never perform worse that the previous one — i.e., show that for all $s \in \mathcal{S}$, $V^\pi(s) \leq V^{\pi^\prime}(s)$.\\\\
+\textit{answer:}\\\\
+We know that
+\begin{align*}
+    V^\pi(s) &{}= R(s) + \gamma\sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime)V^\pi(s^\prime)\\
+    &{}\leq\\
+    B^{\pi^\prime}(V^\pi)(s) &{}= R(S)+ \gamma\sum_{s^\prime \in \mathcal{S}}P_{s,\pi^\prime(s)}(s^\prime)V^\pi(s^\prime)
+\end{align*}
+due to the fact that
+\begin{align*}
+    \gamma\sum_{s^\prime \in \mathcal{S}}P_{s,\pi(s)}(s^\prime)V^\pi(s^\prime) \leq \gamma\max_{a\in A}\sum_{s^\prime \in \mathcal{S}}P_{s,a}(s^\prime)V^\pi(s^\prime) = \gamma\sum_{s^\prime \in \mathcal{S}}P_{s,\pi^\prime(s)}(s^\prime)V^\pi(s^\prime)
+\end{align*}
+We can further expand this to show
+\begin{align*}
+    B^{\pi^\prime}(V^\pi)(s) &{}= R(S)+ \gamma\sum_{s^\prime \in \mathcal{S}}P_{s,\pi^\prime(s)}(s^\prime)V^\pi(s^\prime)\\
+    &{}= R(S)+ \gamma\max_{a\in \mathcal{A}}\sum_{s^\prime \in \mathcal{S}}P_{s,a}(s^\prime)V^\pi(s^\prime)\\
+    &{}= R(S)+ \gamma\max_{a\in \mathcal{A}}\sum_{s^\prime \in \mathcal{S}}P_{s,a}(s^\prime)(R(s^\prime) + \gamma\sum_{s^{\prime\prime} \in \mathcal{S}}P_{s^\prime,\pi(s^\prime)}(s^{\prime\prime})V^\pi(s^{\prime\prime}))\\
+    &{}\leq R(S)+ \gamma\max_{a\in\mathcal{ A}}\sum_{s^\prime \in \mathcal{S}}P_{s,a}(s^\prime)(R(s^\prime) + \gamma\max_{a^\prime \in \mathcal{A}}\sum_{s^{\prime\prime} \in \mathcal{S}}P_{s^\prime,a^\prime}(s^{\prime\prime})V^\pi(s^{\prime\prime}))\\
+    &{}= B^{\pi^\prime}(B^{\pi^\prime}(V^\pi))(s)
+\end{align*}
+Using part (b) we also know that\begin{align*}
+    ||B^\pi(V)-V^\pi ||_\infty\leq \gamma ||V-V^\pi ||_\infty
+\end{align*}
+implies that applying $B^\pi$ repeatedly (an infinite number of times) results in the convergent identity \begin{align*}
+    B^{\pi^\prime}(B^{\pi^\prime} (B^{\pi^\prime}\dots B^{\pi^\prime}(V)\dots ))) = V^{\pi^\prime}
+\end{align*} which finally proves the desired result that $V^\pi(s) \leq V^{\pi^\prime}(s)$ for all $s \in \mathcal{S}$.
+\item Use the proceeding exercises to show that policy iteration will eventually converge (i.e., produce a policy $\pi^\prime = \pi$). Furthermore, show that it must converge to the optimal policy $\pi^*$. For the later part, you may use the property that if some value function satisfies
+\begin{align*}
+    V(s) = R(s) + \gamma\max_{a\in A}\sum_{s^\prime \in \mathcal{S}}P_{s,a}(s^\prime)V(s^\prime)
+\end{align*}
+then $V = V^*$.\\\\
+\textit{answer:}\\\\
+Given that $|S|+|A| < \infty$ (i.e. that the number of states and the number of \\\m actions are both finite), we let $\pi_n$ be the resulting policy after the $n$th iteration of the Policy Iteration, and let
+\begin{align*}
+    \lim_{n\xrightarrow[]{}\infty}\pi_n = \pi_{\infty}
+\end{align*}
+We know from part (c) that $V^\pi(s) \leq V^{\pi^\prime}(s)$ for all s, where $\pi^\prime$ is the resulting policy after one iteration of Policy Iteration, therefore we have that
+\begin{align*}
+    V^{\pi_n}(s) \leq V^{\pi_\infty} \quad\forall s \in \mathcal{S},  \quad \forall n < \infty
+\end{align*}
+However, since there are only $k = |A|^{|S|}$ possibly policies it must be the case that
+\begin{align*}
+    \lim_{n\xrightarrow[]{}\infty}\pi_n = \pi_{k}
+\end{align*}
+Therefore Policy Iteration converges to $\pi_{k}$ and further,
+\begin{align*}
+    V^{\pi_{k}}(s) =&{} R(s) + \gamma\sum_{s^\prime \in \mathcal{S}}P_{s,\pi_{|A|^|S|}}(s^\prime)V^{\pi_{k}}\\
+    =&{} R(s) + \gamma\max_{a\in \mathcal{A}}\sum_{s^\prime \in \mathcal{S}}P_{s,a}(s^\prime)V^{\pi_{k}}
+\end{align*}
+which proves that $V^{\pi_{k}} = V^*$
+\end{enumerate}
+\end{document}
