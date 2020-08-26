@@ -1,4 +1,4 @@
-# Coursework for CS229 Machine Learning
+# Updated Solutions and Implementations for Standford's CS229 Machine Learning
 ## Caroline Wang - Eitan Joseph
 ### Taught by Prof. Andrew Ng
 
